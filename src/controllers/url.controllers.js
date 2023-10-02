@@ -31,7 +31,9 @@ export async function shortenUrl(req, res) {
             return res.status(422).send("Essa URL já existe em nossa base de dados. Você pode acessá-la através desse link: http://" + urlExists.rows[0].shortUrl + ".com");
         }
 
-        await db.query(`INSERT INTO urls(url, "shortUrl") VALUES($1, $2);`, [url, shortUrl]);
+        const userId = await db.query(`SELECT "userID" FROM sessions WHERE token = $1;`, [token]);
+
+        await db.query(`INSERT INTO urls(url, "shortUrl", "createdBy") VALUES($1, $2, $3);`, [url, shortUrl, userId.rows[0].userID]);
 
         const urlInfo = await db.query(`SELECT id, "shortUrl" FROM urls WHERE url = $1;`, [url]);
 
@@ -83,5 +85,24 @@ export async function redirectUrl(req, res) {
 
     } catch (err) {
 
+    }
+}
+
+export async function deleteUrl(req, res) { 
+    const {authorization} = req.headers;
+    const token = authorization?.replace('Bearer ', '');
+
+    if (!token) { 
+        return res.status(401).send("Você deve estar logado.");
+    }
+
+    const {id} = req.params;
+
+    try { 
+
+        await db.query(`SELECT `)
+
+    } catch (err) {
+        res.status(500).send(err);
     }
 }
