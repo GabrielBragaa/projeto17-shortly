@@ -108,3 +108,25 @@ export async function getMe(req, res) {
 
     }
 }
+
+export async function ranking(req, res) {
+
+
+    try {
+
+        const user = await db.query(`SELECT users.id AS "id", users.name AS "name", COALESCE(SUM("visitCount"), 0) AS "visitCount", 
+        COALESCE(COUNT("createdBy"), 0) AS "linksCount"
+        FROM sessions
+        LEFT JOIN users ON users.id = sessions."userID" 
+        LEFT JOIN urls ON "createdBy" = sessions."userID"
+        GROUP BY users.id
+        ORDER BY "visitCount" DESC
+        LIMIT 10;`);
+
+        res.send(user.rows)
+
+    } catch (err) {
+        res.status(500).send(err)
+    }
+
+}
