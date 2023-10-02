@@ -100,7 +100,21 @@ export async function deleteUrl(req, res) {
 
     try { 
 
-        await db.query(`SELECT `)
+        const rawUserId = await db.query(`SELECT "userID" FROM sessions WHERE token = $1;`, [token]);
+        const userId = rawUserId.rows[0].userID;
+        const rawCreatedBy = await db.query(`SELECT "createdBy" FROM urls WHERE id = $1;`, [id]);
+        const createdBy = rawCreatedBy.rows[0].createdBy;
+
+        if (userId !== createdBy) { 
+            return res.status(401).send("Você não pode excluir essa URL");
+        }
+
+        const urlExists = await db.query(`DELETE FROM urls WHERE id = $1;`, [id]);
+
+        if (urlExists.rowCount === 0) {
+            return res.status(404).send("URL não existe.");
+        }
+        res.status(204).send("URL excluída com sucesso.");
 
     } catch (err) {
         res.status(500).send(err);
