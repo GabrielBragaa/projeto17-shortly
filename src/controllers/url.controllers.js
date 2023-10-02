@@ -12,6 +12,8 @@ export async function shortenUrl(req, res) {
 
     const schemaUrl = Joi.object({url: Joi.string().uri().required()});
 
+    const {url} = req.body;
+
     const validation = schemaUrl.validate(req.body, {abortEarly: false});
 
     if (validation.error) {
@@ -23,17 +25,35 @@ export async function shortenUrl(req, res) {
 
     try {   
 
-        const urlExists = await db.query(`SELECT * FROM urls WHERE url = $1;`, [req.body]);
+        const urlExists = await db.query(`SELECT * FROM urls WHERE url = $1;`, [url]);
 
         if (urlExists.rowCount !== 0) {
             return res.status(422).send("Essa URL já existe em nossa base de dados. Você pode acessá-la através desse link: http://" + urlExists.rows[0].shortUrl + ".com");
         }
 
-        await db.query(`INSERT INTO urls(url, "shortUrl") VALUES($1, $2);`, [req.body, shortUrl]);
+        await db.query(`INSERT INTO urls(url, "shortUrl") VALUES($1, $2);`, [url, shortUrl]);
 
-        const urlInfo = await db.query(`SELECT id, "shortUrl" FROM urls WHERE url = $1;`, [req.body]);
+        const urlInfo = await db.query(`SELECT id, "shortUrl" FROM urls WHERE url = $1;`, [url]);
 
         res.status(201).send(urlInfo.rows[0]);
+
+    } catch (err) {
+
+    }
+}
+
+export async function getUrl(req, res) {
+    const {id} = req.params;
+    
+    try {
+
+        const url = await db.query(`SELECT id, "shortUrl", url FROM urls WHERE id = $1;`, [id]);
+
+        if (url.rowCount === 0) {
+            return res.status(404).send("A URL requisitada não existe.");
+        }
+
+        res.status(200).send(url.rows[0]);
 
     } catch (err) {
 
