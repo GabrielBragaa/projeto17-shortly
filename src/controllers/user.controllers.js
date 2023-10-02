@@ -84,3 +84,7 @@ export async function signIn(req, res) {
         return res.status(500).send(err);
     }
 }
+
+export async function getMe(req, res) { 
+    
+}
