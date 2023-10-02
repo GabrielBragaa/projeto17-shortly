@@ -86,5 +86,25 @@ export async function signIn(req, res) {
 }
 
 export async function getMe(req, res) { 
-    
+    const {authorization} = req.headers;
+    const token = authorization?.replace('Bearer ', '');
+
+    if (!token) { 
+        return res.status(401).send("Você deve estar logado.");
+    }
+
+    try {
+
+        const user = await db.query(`SELECT users.id AS "id", users.name AS "name", SUM("visitCount") AS "visitCount"
+        FROM sessions
+        JOIN users ON users.id = sessions."userID" 
+        JOIN urls ON "createdBy" = sessions."userID"
+        WHERE token = $1
+        GROUP BY users.id;`, [token]);
+
+        res.send(user.rows[0]);
+
+    } catch (err) { 
+
+    }
 }
