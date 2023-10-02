@@ -102,7 +102,7 @@ export async function getMe(req, res) {
         WHERE token = $1
         GROUP BY users.id;`, [token]);
 
-        res.send(user.rows[0]);
+        res.send(user.rows);
 
     } catch (err) { 
 
