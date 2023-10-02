@@ -44,7 +44,7 @@ export async function shortenUrl(req, res) {
 
 export async function getUrl(req, res) {
     const {id} = req.params;
-    
+
     try {
 
         const url = await db.query(`SELECT id, "shortUrl", url FROM urls WHERE id = $1;`, [id]);
@@ -54,6 +54,32 @@ export async function getUrl(req, res) {
         }
 
         res.status(200).send(url.rows[0]);
+
+    } catch (err) {
+
+    }
+}
+
+export async function redirectUrl(req, res) {
+    const {shortUrl} = req.params;
+
+    try {
+
+        const urlExists = await db.query(`SELECT * FROM urls WHERE "shortUrl" = $1;`, [shortUrl]);
+
+        if (urlExists.rowCount === 0) {
+            return res.status(404).send("Essa URL não existe.");
+        }
+
+        const rawVisitCount = await db.query(`SELECT "visitCount" FROM urls WHERE "shortUrl" = $1;`, [shortUrl]);
+        let visitCount = rawVisitCount.rows[0].visitCount;
+        visitCount = visitCount + 1;
+
+        await db.query(`UPDATE urls SET "visitCount" = $1 WHERE "shortUrl" = $2;`, [visitCount, shortUrl]);
+        const rawLink = await db.query(`SELECT url FROM urls WHERE "shortUrl" = $1;`, [shortUrl]);
+        const link = rawLink.rows[0].url;
+
+        res.redirect(link);
 
     } catch (err) {
 
